@@ -1,0 +1,24 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:devaudit;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/auth/realms/devaudit
+  h2:
+    console:
+      enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+keycloak:
+  server-url: http://localhost:8081/auth
+  realm: devaudit
+  client-id: admin-cli
+  client-secret: secret
+  admin-username: admin
+  admin-password: admin

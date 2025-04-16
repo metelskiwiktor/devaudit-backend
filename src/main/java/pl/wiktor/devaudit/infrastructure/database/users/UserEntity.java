@@ -1,4 +1,4 @@
-package pl.wiktor.devaudit.infrastructure.database.users.UserEntity;
+package pl.wiktor.devaudit.infrastructure.database.users;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -15,6 +15,12 @@ public class UserEntity {
     private UserRole role;
 
     public UserEntity() {
+    }
+
+    public UserEntity(String keycloakId, String email, UserRole role) {
+        this.keycloakId = keycloakId;
+        this.email = email;
+        this.role = role;
     }
 
     public String getKeycloakId() {

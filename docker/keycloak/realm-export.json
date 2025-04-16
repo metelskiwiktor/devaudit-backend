@@ -1,5 +1,5 @@
 {
-  "realm": "demo-realm",
+  "realm": "devaudit",
   "enabled": true,
   "clients": [
     {
@@ -15,16 +15,6 @@
     }
   ],
   "users": [
-    {
-      "username": "user",
-      "enabled": true,
-      "credentials": [
-        {
-          "type": "password",
-          "value": "password"
-        }
-      ]
-    },
     {
       "username": "mentor",
       "enabled": true,
@@ -60,6 +50,24 @@
       "realmRoles": [
         "student"
       ]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Waćpan",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "admin"
+      ]
     }
   ],
   "roles": {
@@ -71,6 +79,10 @@
       {
         "name": "student",
         "description": "Student role"
+      },
+      {
+        "name": "admin",
+        "description": "Admin role"
       }
     ]
   }

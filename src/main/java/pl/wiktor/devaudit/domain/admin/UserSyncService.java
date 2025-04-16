@@ -1,1 +1,7 @@
-package pl.wiktor.devaudit.domain.admin; public class ImportService { }
+package pl.wiktor.devaudit.domain.admin;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserSyncService {
+}
