@@ -1,26 +1,22 @@
-package pl.wiktor.devaudit.infrastructure.database.users;
+package pl.wiktor.devaudit.infrastructure.database.student;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import pl.wiktor.devaudit.domain.UserRole;
+import jakarta.persistence.Table;
 
 @Entity
-public class UserEntity {
+@Table(name = "students")
+public class StudentEntity {
     @Id
     private String keycloakId;
     private String email;
-    @Enumerated(EnumType.STRING)
-    private UserRole role;
 
-    public UserEntity() {
+    public StudentEntity() {
     }
 
-    public UserEntity(String keycloakId, String email, UserRole role) {
+    public StudentEntity(String keycloakId, String email) {
         this.keycloakId = keycloakId;
         this.email = email;
-        this.role = role;
     }
 
     public String getKeycloakId() {
@@ -37,13 +33,5 @@ public class UserEntity {
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-    public UserRole getRole() {
-        return role;
-    }
-
-    public void setRole(UserRole role) {
-        this.role = role;
     }
 }

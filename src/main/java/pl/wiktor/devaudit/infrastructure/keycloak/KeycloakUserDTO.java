@@ -1,6 +1,19 @@
 package pl.wiktor.devaudit.infrastructure.keycloak;
 
-import pl.wiktor.devaudit.domain.UserRole;
+import pl.wiktor.devaudit.domain.user.UserRole;
 
-public record KeycloakUserDTO(String id, String email, UserRole role) {
+import java.util.Set;
+
+public record KeycloakUserDTO(String id, String email, Set<UserRole> roles) {
+    public boolean isStudent() {
+        return roles.contains(UserRole.STUDENT);
+    }
+
+    public boolean isMentor() {
+        return roles.contains(UserRole.MENTOR);
+    }
+
+    public boolean isAdmin() {
+        return roles.contains(UserRole.ADMIN);
+    }
 }

@@ -1,4 +1,4 @@
-package pl.wiktor.devaudit.api.controller.response;
+package pl.wiktor.devaudit.api.response;
 
 public record SyncUsersResponse(int syncedCount) {
 }

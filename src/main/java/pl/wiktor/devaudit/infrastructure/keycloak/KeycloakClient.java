@@ -10,9 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import pl.wiktor.devaudit.domain.UserRole;
+import pl.wiktor.devaudit.domain.user.UserRole;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -42,26 +44,40 @@ public class KeycloakClient {
         Keycloak keycloak = getKeycloakClient();
         RealmResource realmResource = keycloak.realm(realm);
         UsersResource usersResource = realmResource.users();
-        
+
         List<UserRepresentation> keycloakUsers = usersResource.list();
-        
+
         List<KeycloakUserDTO> result = keycloakUsers.stream()
                 .map(user -> {
                     String userId = user.getId();
-                    List<String> roles = getUserRoles(realmResource, userId);
-                    UserRole userRole = determineUserRole(roles);
-                    
+                    List<String> roleNames = getUserRoles(realmResource, userId);
+                    Set<UserRole> roles = mapToUserRoles(roleNames);
+
                     return new KeycloakUserDTO(
                             userId,
                             user.getEmail(),
-                            userRole
+                            roles
                     );
                 })
-                .filter(dto -> dto.role() != null)
+                .filter(dto -> !dto.roles().isEmpty())
                 .collect(Collectors.toList());
-        
+
         LOGGER.info("Retrieved {} valid users from Keycloak", result.size());
         return result;
+    }
+
+    private Set<UserRole> mapToUserRoles(List<String> roleNames) {
+        Set<UserRole> roles = new HashSet<>();
+
+        for (String roleName : roleNames) {
+            try {
+                roles.add(UserRole.valueOf(roleName.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                LOGGER.warn("Unknown role: {}", roleName);
+            }
+        }
+
+        return roles;
     }
     
     private List<String> getUserRoles(RealmResource realmResource, String userId) {
@@ -72,17 +88,6 @@ public class KeycloakClient {
                 .map(RoleRepresentation::getName)
                 .map(String::toUpperCase)
                 .collect(Collectors.toList());
-    }
-    
-    private UserRole determineUserRole(List<String> realmRoles) {
-        if (realmRoles.contains("ADMIN")) {
-            return UserRole.ADMIN;
-        } else if (realmRoles.contains("MENTOR")) {
-            return UserRole.MENTOR;
-        } else if (realmRoles.contains("STUDENT")) {
-            return UserRole.STUDENT;
-        }
-        return null;
     }
     
     private Keycloak getKeycloakClient() {
