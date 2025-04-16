@@ -1,0 +1,13 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: start-dev --import-realm --spi-connections-http-client-default-request-rewrite-path=/auth/realms
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_RELATIVE_PATH: /auth
+      KEYCLOAK_FRONTEND_URL: http://localhost:8081/auth
+    volumes:
+      - ./keycloak:/opt/keycloak/data/import
+    ports:
+      - "8081:8080"
