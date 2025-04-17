@@ -19,13 +19,16 @@ public class SurveyService {
     private final SurveyRepository surveyRepository;
     private final StudentRepository studentRepository;
     private final KeycloakRegistrationService keycloakRegistrationService;
+    private final SurveyFormRepository surveyFormRepository;
 
     public SurveyService(SurveyRepository surveyRepository,
                          StudentRepository studentRepository,
-                         KeycloakRegistrationService keycloakRegistrationService) {
+                         KeycloakRegistrationService keycloakRegistrationService,
+                         SurveyFormRepository surveyFormRepository) {
         this.surveyRepository = surveyRepository;
         this.studentRepository = studentRepository;
         this.keycloakRegistrationService = keycloakRegistrationService;
+        this.surveyFormRepository = surveyFormRepository;
     }
 
     public Survey generateSurvey(String mentorId) {
@@ -41,10 +44,8 @@ public class SurveyService {
         return surveyRepository.findAllByMentorId(mentorId);
     }
 
-    public void submitSurvey(String surveyId, String firstName, String lastName, String email) {
-        LOGGER.info("Processing survey submission for UUID: {}", surveyId);
-
-        Validator.validateSubmitSurvey(surveyId, firstName, lastName, email);
+    public void submitSurveyForm(SurveySubmission surveySubmission, String surveyId) {
+        LOGGER.info("Processing detailed survey form for survey ID: {}", surveyId);
 
         Survey survey = surveyRepository.findById(surveyId)
                 .orElseThrow(() -> {
@@ -53,9 +54,28 @@ public class SurveyService {
                 });
 
         if (survey.used()) {
-            LOGGER.warn("Survey with UUID {} already used", surveyId);
+            LOGGER.warn("Survey {} already used", surveyId);
             throw new SurveyAlreadyUsedException(surveyId, HttpStatus.BAD_REQUEST);
+
         }
+
+        // Save the survey form data
+        surveyFormRepository.saveSurveyForm(surveySubmission, surveyId);
+        LOGGER.info("Survey form data saved successfully");
+
+        // Mark survey as used if not already used
+        Survey updatedSurvey = survey.markAsUsed();
+        surveyRepository.save(updatedSurvey);
+        LOGGER.debug("Survey marked as used");
+
+        // Extract basic info for Keycloak registration
+        String fullName = surveySubmission.personalInfo().fullName();
+        String email = surveySubmission.personalInfo().email();
+
+        // Split fullName into firstName and lastName
+        String[] nameParts = fullName.split(" ", 2);
+        String firstName = nameParts[0];
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
 
         // Register student in Keycloak
         String keycloakId = keycloakRegistrationService.registerStudent(firstName, lastName, email);
@@ -65,27 +85,17 @@ public class SurveyService {
         Student student = new Student(keycloakId, email);
         studentRepository.save(student);
         LOGGER.info("Student saved in database");
-
-        // Mark survey as used
-        Survey updatedSurvey = survey.markAsUsed();
-        surveyRepository.save(updatedSurvey);
-        LOGGER.info("Survey marked as used");
     }
 
-    static class Validator {
-        public static void validateSubmitSurvey(String surveyId, String firstName, String lastName, String email) {
-            if (surveyId == null || surveyId.isEmpty()) {
-                throw new IllegalArgumentException("Survey ID cannot be null or empty");
-            }
-            if (firstName == null || firstName.isEmpty()) {
-                throw new IllegalArgumentException("First name cannot be null or empty");
-            }
-            if (lastName == null || lastName.isEmpty()) {
-                throw new IllegalArgumentException("Last name cannot be null or empty");
-            }
-            if (email == null || email.isEmpty()) {
-                throw new IllegalArgumentException("Email cannot be null or empty");
-            }
-        }
+    public SurveySubmission getSurveySubmission(String surveyId) {
+        LOGGER.info("Getting survey form for survey ID: {}", surveyId);
+        return surveyFormRepository.findBySurveyId(surveyId)
+                .orElseThrow(() -> new SurveyNotFoundException(surveyId, HttpStatus.NOT_FOUND));
+    }
+
+    public Survey getSurvey(String surveyId) {
+        LOGGER.info("Getting survey ID: {}", surveyId);
+        return surveyRepository.findById(surveyId)
+                .orElseThrow(() -> new SurveyNotFoundException(surveyId, HttpStatus.NOT_FOUND));
     }
 }

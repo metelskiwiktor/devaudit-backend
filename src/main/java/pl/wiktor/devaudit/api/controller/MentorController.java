@@ -3,15 +3,13 @@ package pl.wiktor.devaudit.api.controller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import pl.wiktor.devaudit.api.response.GenerateSurveyResponse;
+import pl.wiktor.devaudit.api.response.SurveyResponse;
 import pl.wiktor.devaudit.domain.mentor.Mentor;
 import pl.wiktor.devaudit.domain.survey.Survey;
 import pl.wiktor.devaudit.domain.survey.SurveyService;
-import pl.wiktor.devaudit.infrastructure.security.LoggedMentor;
+import pl.wiktor.devaudit.infrastructure.security.annotation.LoggedMentor;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,6 +44,18 @@ public class MentorController {
 
         return ResponseEntity.ok(response);
     }
+
+@GetMapping("/survey/{surveyId}")
+        public ResponseEntity<SurveyResponse> getSurvey(@PathVariable String surveyId) {
+            LOGGER.info("Checking survey ID: {}", surveyId);
+
+            SurveyResponse response = new SurveyResponse(
+                    surveyService.getSurvey(surveyId),
+                    surveyService.getSurveySubmission(surveyId)
+            );
+
+            return ResponseEntity.ok(response);
+        }
 
     @GetMapping("/surveys")
     public ResponseEntity<List<GenerateSurveyResponse>> getSurveys(@LoggedMentor Mentor mentor) {

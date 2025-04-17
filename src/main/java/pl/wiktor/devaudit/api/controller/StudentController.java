@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.wiktor.devaudit.domain.student.Student;
-import pl.wiktor.devaudit.infrastructure.security.LoggedStudent;
+import pl.wiktor.devaudit.infrastructure.security.annotation.LoggedStudent;
 
 @RestController
 @RequestMapping("/api/student")

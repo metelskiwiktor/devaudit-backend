@@ -1,4 +1,4 @@
-package pl.wiktor.devaudit.infrastructure.security;
+package pl.wiktor.devaudit.infrastructure.security.annotation;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;

@@ -1,4 +1,4 @@
-package pl.wiktor.devaudit.infrastructure.security;
+package pl.wiktor.devaudit.infrastructure.security.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
