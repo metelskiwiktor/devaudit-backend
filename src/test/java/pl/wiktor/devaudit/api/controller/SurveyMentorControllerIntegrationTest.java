@@ -1,3 +1,5 @@
+package pl.wiktor.devaudit.api.controller;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
