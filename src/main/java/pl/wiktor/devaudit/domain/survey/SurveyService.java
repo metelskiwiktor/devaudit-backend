@@ -59,30 +59,21 @@ public class SurveyService {
 
         }
 
-        // Save the survey form data
         surveyFormRepository.saveSurveyForm(surveySubmission, surveyId);
         LOGGER.info("Survey form data saved successfully");
 
-        // Mark survey as used if not already used
         Survey updatedSurvey = survey.markAsUsed();
         surveyRepository.save(updatedSurvey);
         LOGGER.debug("Survey marked as used");
 
-        // Extract basic info for Keycloak registration
-        String fullName = surveySubmission.personalInfo().fullName();
         String email = surveySubmission.personalInfo().email();
+        String firstName = surveySubmission.personalInfo().firstName();
+        String lastName = surveySubmission.personalInfo().lastName();
 
-        // Split fullName into firstName and lastName
-        String[] nameParts = fullName.split(" ", 2);
-        String firstName = nameParts[0];
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
-
-        // Register student in Keycloak
         String keycloakId = keycloakRegistrationService.registerStudent(firstName, lastName, email);
         LOGGER.info("Student registered in Keycloak with ID: {}", keycloakId);
 
-        // Save student in database
-        Student student = new Student(keycloakId, email);
+        Student student = new Student(keycloakId, firstName, email);
         studentRepository.save(student);
         LOGGER.info("Student saved in database");
     }

@@ -23,7 +23,7 @@ public class MentorRepositoryJPA implements MentorRepository {
     @Override
     public void save(Mentor mentor) {
         LOGGER.debug("Saving mentor with id: {}", mentor.keycloakId());
-        MentorEntity entity = new MentorEntity(mentor.keycloakId(), mentor.email(), mentor.isAdmin());
+        MentorEntity entity = new MentorEntity(mentor.keycloakId(), mentor.firstname(), mentor.email(), mentor.isAdmin());
         mentorRepository.save(entity);
     }
 
@@ -31,14 +31,14 @@ public class MentorRepositoryJPA implements MentorRepository {
     public Optional<Mentor> findById(String id) {
         LOGGER.debug("Finding mentor by id: {}", id);
         return mentorRepository.findById(id)
-                .map(entity -> new Mentor(entity.getKeycloakId(), entity.getEmail(), entity.isAdmin()));
+                .map(entity -> new Mentor(entity.getKeycloakId(), entity.getFirstname(), entity.getEmail(), entity.isAdmin()));
     }
 
     @Override
     public List<Mentor> findAll() {
         LOGGER.debug("Finding all mentors");
         return mentorRepository.findAll().stream()
-                .map(entity -> new Mentor(entity.getKeycloakId(), entity.getEmail(), entity.isAdmin()))
+                .map(entity -> new Mentor(entity.getKeycloakId(), entity.getFirstname(), entity.getEmail(), entity.isAdmin()))
                 .collect(Collectors.toList());
     }
 
@@ -46,7 +46,7 @@ public class MentorRepositoryJPA implements MentorRepository {
     public List<Mentor> findByAdminStatus(boolean isAdmin) {
         LOGGER.debug("Finding mentors with admin status: {}", isAdmin);
         return mentorRepository.findByAdmin(isAdmin).stream()
-                .map(entity -> new Mentor(entity.getKeycloakId(), entity.getEmail(), entity.isAdmin()))
+                .map(entity -> new Mentor(entity.getKeycloakId(), entity.getFirstname(), entity.getEmail(), entity.isAdmin()))
                 .collect(Collectors.toList());
     }
 }

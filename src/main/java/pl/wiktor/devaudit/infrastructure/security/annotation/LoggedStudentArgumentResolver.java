@@ -35,7 +35,6 @@ public class LoggedStudentArgumentResolver implements HandlerMethodArgumentResol
         }
 
         String keycloakId = jwt.getSubject();
-
         return studentRepository.findById(keycloakId)
                 .orElseThrow(() -> new UserNotFoundException(keycloakId, HttpStatus.UNAUTHORIZED));
     }

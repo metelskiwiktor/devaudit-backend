@@ -21,7 +21,8 @@ public class SubmitSurveyFormRequestToSurveySubmission implements Converter<Subm
 
     private SurveySubmission.PersonalInfo mapPersonalInfo(SubmitSurveyFormRequest.PersonalInfo info) {
         return new SurveySubmission.PersonalInfo(
-                info.fullName(),
+                info.firstName(),
+                info.lastName(),
                 info.email(),
                 info.phone(),
                 info.education(),

@@ -76,21 +76,8 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.23.0</version>
-                <configuration>
-                    <rulesets>
-                        <ruleset>rulesets/java/quickstart.xml</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedLocalVariable</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedPrivateField</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedFormalParameter</ruleset>
-                        <ruleset>category/java/bestpractices.xml/UnusedImports</ruleset>
-                        <ruleset>category/java/codestyle.xml/UnnecessaryLocalBeforeReturn</ruleset>
-                    </rulesets>
-                    <language>java</language>
-                    <targetJdk>21</targetJdk>
-                </configuration>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

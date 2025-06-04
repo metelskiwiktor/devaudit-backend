@@ -31,14 +31,14 @@ public class StudentRepositoryJPA implements StudentRepository {
     public Optional<Student> findById(String id) {
         LOGGER.debug("Finding student by id: {}", id);
         return studentRepository.findById(id)
-                .map(entity -> new Student(entity.getKeycloakId(), entity.getEmail()));
+                .map(entity -> new Student(entity.getKeycloakId(), entity.getFirstName(), entity.getEmail()));
     }
 
     @Override
     public List<Student> findAll() {
         LOGGER.debug("Finding all students");
         return studentRepository.findAll().stream()
-                .map(entity -> new Student(entity.getKeycloakId(), entity.getEmail()))
+                .map(entity -> new Student(entity.getKeycloakId(), entity.getFirstName(), entity.getEmail()))
                 .collect(Collectors.toList());
     }
 }

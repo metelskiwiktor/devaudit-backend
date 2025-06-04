@@ -10,18 +10,18 @@ import pl.wiktor.devaudit.domain.survey.SurveyService;
 import pl.wiktor.devaudit.domain.survey.SurveySubmission;
 
 /**
- * UserController is responsible for managing not register/logged operations.
+ * AnonymousController is responsible for managing not register/logged operations.
  * Can be accessed by anyone.
  */
 @RestController
-@RequestMapping("/api/user")
-public class UserController {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
+@RequestMapping("/api/anonymous")
+public class AnonymousController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnonymousController.class);
 
     private final SurveyService surveyService;
     private final ConversionService conversionService;
 
-    public UserController(SurveyService surveyService, ConversionService conversionService) {
+    public AnonymousController(SurveyService surveyService, ConversionService conversionService) {
         this.surveyService = surveyService;
         this.conversionService = conversionService;
     }

@@ -4,7 +4,7 @@ import pl.wiktor.devaudit.domain.user.UserRole;
 
 import java.util.Set;
 
-public record KeycloakUserDTO(String id, String email, Set<UserRole> roles) {
+public record KeycloakUserDTO(String id, String firstname, String email, Set<UserRole> roles) {
     public boolean isStudent() {
         return roles.contains(UserRole.STUDENT);
     }

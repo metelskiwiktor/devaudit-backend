@@ -40,12 +40,13 @@ public class UserSyncService {
             try {
                 String userId = keycloakUser.id();
                 String email = keycloakUser.email();
+                String firstname = keycloakUser.firstname();
 
                 if (keycloakUser.isStudent()) {
-                    syncedCount += syncStudent(userId, email);
+                    syncedCount += syncStudent(userId, firstname, email);
                 } else if (keycloakUser.isMentor()) {
                     boolean isAdmin = keycloakUser.isAdmin();
-                    syncedCount += syncMentor(userId, email, isAdmin);
+                    syncedCount += syncMentor(userId, firstname, email, isAdmin);
                 } else {
                     LOGGER.warn("User {} has invalid role combination", userId);
                 }
@@ -58,40 +59,40 @@ public class UserSyncService {
         return syncedCount;
     }
 
-    private int syncStudent(String userId, String email) {
+    private int syncStudent(String userId, String firstname, String email) {
         Optional<Student> existingStudent = studentRepository.findById(userId);
 
         if (existingStudent.isPresent()) {
             Student student = existingStudent.get();
             if (!student.email().equals(email)) {
-                Student updatedStudent = new Student(userId, email);
+                Student updatedStudent = new Student(userId, firstname, email);
                 LOGGER.info("Updating student: {}", updatedStudent);
                 studentRepository.save(updatedStudent);
                 return 1;
             }
             return 0;
         } else {
-            Student newStudent = new Student(userId, email);
+            Student newStudent = new Student(userId, firstname, email);
             LOGGER.info("Adding new student: {}", newStudent);
             studentRepository.save(newStudent);
             return 1;
         }
     }
 
-    private int syncMentor(String userId, String email, boolean isAdmin) {
+    private int syncMentor(String userId, String firstname, String email, boolean isAdmin) {
         Optional<Mentor> existingMentor = mentorRepository.findById(userId);
 
         if (existingMentor.isPresent()) {
             Mentor mentor = existingMentor.get();
             if (!mentor.email().equals(email) || mentor.isAdmin() != isAdmin) {
                 LOGGER.info("Updating mentor: {}", mentor);
-                Mentor updatedMentor = new Mentor(userId, email, isAdmin);
+                Mentor updatedMentor = new Mentor(userId, firstname, email, isAdmin);
                 mentorRepository.save(updatedMentor);
                 return 1;
             }
             return 0;
         } else {
-            Mentor newMentor = new Mentor(userId, email, isAdmin);
+            Mentor newMentor = new Mentor(userId, firstname, email, isAdmin);
             LOGGER.info("Adding new mentor: {}", newMentor);
             mentorRepository.save(newMentor);
             return 1;

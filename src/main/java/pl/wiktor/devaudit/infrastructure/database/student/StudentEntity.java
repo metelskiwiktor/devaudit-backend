@@ -10,6 +10,7 @@ public class StudentEntity {
     @Id
     private String keycloakId;
     private String email;
+    private String firstName;
 
     public StudentEntity() {
     }
@@ -33,5 +34,13 @@ public class StudentEntity {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
     }
 }

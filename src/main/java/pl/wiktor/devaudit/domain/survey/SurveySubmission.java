@@ -11,7 +11,8 @@ public record SurveySubmission(
         AdditionalInfo additionalInfo
 ) {
     public record PersonalInfo(
-            String fullName,
+            String firstName,
+            String lastName,
             String email,
             String phone,
             String education,

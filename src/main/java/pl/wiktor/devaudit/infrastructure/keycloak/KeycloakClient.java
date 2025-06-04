@@ -56,6 +56,7 @@ public class KeycloakClient {
                     return new KeycloakUserDTO(
                             userId,
                             user.getEmail(),
+                            user.getFirstName(),
                             roles
                     );
                 })

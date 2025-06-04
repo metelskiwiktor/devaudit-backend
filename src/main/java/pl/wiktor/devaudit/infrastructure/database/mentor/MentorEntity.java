@@ -9,14 +9,16 @@ import jakarta.persistence.Table;
 public class MentorEntity {
     @Id
     private String keycloakId;
+    private String firstname;
     private String email;
     private boolean admin;
 
     public MentorEntity() {
     }
 
-    public MentorEntity(String keycloakId, String email, boolean admin) {
+    public MentorEntity(String keycloakId, String firstname, String email, boolean admin) {
         this.keycloakId = keycloakId;
+        this.firstname = firstname;
         this.email = email;
         this.admin = admin;
     }
@@ -43,5 +45,13 @@ public class MentorEntity {
 
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    public String getFirstname() {
+        return firstname;
+    }
+
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
     }
 }
