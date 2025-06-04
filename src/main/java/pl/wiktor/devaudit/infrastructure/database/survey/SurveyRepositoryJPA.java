@@ -3,8 +3,11 @@ package pl.wiktor.devaudit.infrastructure.database.survey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
+import pl.wiktor.devaudit.domain.mentor.Mentor;
 import pl.wiktor.devaudit.domain.survey.Survey;
 import pl.wiktor.devaudit.domain.survey.SurveyRepository;
+import pl.wiktor.devaudit.domain.survey.SurveyStatus;
+import pl.wiktor.devaudit.domain.survey.SurveyStudentInfo;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,11 +26,16 @@ public class SurveyRepositoryJPA implements SurveyRepository {
     @Override
     public void save(Survey survey) {
         LOGGER.debug("Saving survey with id: {}", survey.id());
+        SurveyStudentInfo info = survey.studentInfo();
         SurveyEntity entity = new SurveyEntity(
                 survey.id(),
-                survey.mentorId(),
+                survey.mentor().keycloakId(),
+                survey.status(),
                 survey.creationDate(),
-                survey.used()
+                survey.completedDate(),
+                info != null ? info.firstName() : null,
+                info != null ? info.lastName() : null,
+                info != null ? info.email() : null
         );
         surveyRepository.save(entity);
     }
@@ -38,9 +46,11 @@ public class SurveyRepositoryJPA implements SurveyRepository {
         return surveyRepository.findById(id)
                 .map(entity -> new Survey(
                         entity.getId(),
-                        entity.getMentorId(),
+                        new Mentor(entity.getMentorId(), null, null, false),
+                        entity.getStatus(),
                         entity.getCreationDate(),
-                        entity.getUsed()
+                        entity.getCompletedDate(),
+                        mapStudentInfo(entity)
                 ));
     }
 
@@ -50,10 +60,23 @@ public class SurveyRepositoryJPA implements SurveyRepository {
         return surveyRepository.findByMentorId(mentorId).stream()
                 .map(entity -> new Survey(
                         entity.getId(),
-                        entity.getMentorId(),
+                        new Mentor(entity.getMentorId(), null, null, false),
+                        entity.getStatus(),
                         entity.getCreationDate(),
-                        entity.getUsed()
+                        entity.getCompletedDate(),
+                        mapStudentInfo(entity)
                 ))
                 .collect(Collectors.toList());
+    }
+
+    private SurveyStudentInfo mapStudentInfo(SurveyEntity entity) {
+        if (entity.getStudentEmail() == null) {
+            return null;
+        }
+        return new SurveyStudentInfo(
+                entity.getStudentFirstName(),
+                entity.getStudentLastName(),
+                entity.getStudentEmail()
+        );
     }
 }
