@@ -1,0 +1,93 @@
+{
+  "realm": "devaudit",
+  "enabled": true,
+  "loginWithEmailAllowed": true,
+  "registrationEmailAsUsername": true,
+  "clients": [
+    {
+      "clientId": "springboot-client",
+      "secret": "secret",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "redirectUris": [
+        "*"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true
+    }
+  ],
+  "users": [
+    {
+      "username": "mentor",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jan",
+      "lastName": "Kowalski",
+      "email": "mentor@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "mentor"
+      ]
+    },
+    {
+      "username": "student",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Anna",
+      "lastName": "Nowak",
+      "email": "student@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "student"
+      ]
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Admin",
+      "lastName": "Waćpan",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "mentor",
+        "admin"
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "mentor",
+        "description": "Mentor role"
+      },
+      {
+        "name": "student",
+        "description": "Student role"
+      },
+      {
+        "name": "admin",
+        "description": "Admin role, should be used with mentor role"
+      }
+    ]
+  }
+}
