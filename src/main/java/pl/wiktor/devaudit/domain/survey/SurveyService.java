@@ -6,9 +6,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import pl.wiktor.devaudit.domain.exception.SurveyAlreadyUsedException;
 import pl.wiktor.devaudit.domain.exception.SurveyNotFoundException;
+import pl.wiktor.devaudit.domain.mentor.Mentor;
 import pl.wiktor.devaudit.domain.student.Student;
 import pl.wiktor.devaudit.domain.student.StudentRepository;
 import pl.wiktor.devaudit.infrastructure.keycloak.KeycloakRegistrationService;
+import pl.wiktor.devaudit.domain.survey.SurveyStatus;
+import pl.wiktor.devaudit.domain.survey.SurveyStudentInfo;
 
 import java.util.List;
 
@@ -31,9 +34,9 @@ public class SurveyService {
         this.surveyFormRepository = surveyFormRepository;
     }
 
-    public Survey generateSurvey(String mentorId) {
-        LOGGER.info("Generating survey for mentor: {}", mentorId);
-        Survey survey = Survey.create(mentorId);
+    public Survey generateSurvey(Mentor mentor, SurveyStudentInfo studentInfo) {
+        LOGGER.info("Generating survey for mentor: {}", mentor.keycloakId());
+        Survey survey = Survey.create(mentor, studentInfo);
         surveyRepository.save(survey);
         LOGGER.info("Survey generated with UUID: {}", survey.id());
         return survey;
@@ -53,22 +56,23 @@ public class SurveyService {
                     return new SurveyNotFoundException(surveyId, HttpStatus.NOT_FOUND);
                 });
 
-        if (survey.used()) {
-            LOGGER.warn("Survey {} already used", surveyId);
+        if (survey.status() != SurveyStatus.PENDING) {
+            LOGGER.warn("Survey {} already completed", surveyId);
             throw new SurveyAlreadyUsedException(surveyId, HttpStatus.BAD_REQUEST);
 
         }
 
-        surveyFormRepository.saveSurveyForm(surveySubmission, surveyId);
-        LOGGER.info("Survey form data saved successfully");
-
-        Survey updatedSurvey = survey.markAsUsed();
-        surveyRepository.save(updatedSurvey);
-        LOGGER.debug("Survey marked as used");
-
         String email = surveySubmission.personalInfo().email();
         String firstName = surveySubmission.personalInfo().firstName();
         String lastName = surveySubmission.personalInfo().lastName();
+
+        surveyFormRepository.saveSurveyForm(surveySubmission, surveyId);
+        LOGGER.info("Survey form data saved successfully");
+
+        SurveyStudentInfo studentInfo = new SurveyStudentInfo(firstName, lastName, email);
+        Survey updatedSurvey = survey.markAsCompleted(studentInfo);
+        surveyRepository.save(updatedSurvey);
+        LOGGER.debug("Survey marked as completed");
 
         String keycloakId = keycloakRegistrationService.registerStudent(firstName, lastName, email);
         LOGGER.info("Student registered in Keycloak with ID: {}", keycloakId);

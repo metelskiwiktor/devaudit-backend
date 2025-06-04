@@ -4,11 +4,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.wiktor.devaudit.api.request.GenerateSurveyRequest;
 import pl.wiktor.devaudit.api.response.GenerateSurveyResponse;
 import pl.wiktor.devaudit.api.response.SurveyResponse;
 import pl.wiktor.devaudit.domain.mentor.Mentor;
 import pl.wiktor.devaudit.domain.survey.Survey;
 import pl.wiktor.devaudit.domain.survey.SurveyService;
+import pl.wiktor.devaudit.domain.survey.SurveyStudentInfo;
 import pl.wiktor.devaudit.infrastructure.security.annotation.LoggedMentor;
 
 import java.util.List;
@@ -25,16 +27,18 @@ public class SurveyMentorController {
     }
 
     @PostMapping("/generate")
-    public ResponseEntity<GenerateSurveyResponse> generateSurvey(@LoggedMentor Mentor mentor) {
+    public ResponseEntity<GenerateSurveyResponse> generateSurvey(@LoggedMentor Mentor mentor,
+                                                                @RequestBody GenerateSurveyRequest request) {
         LOGGER.info("Generate survey called by mentor: {}", mentor.keycloakId());
 
-        Survey survey = surveyService.generateSurvey(mentor.keycloakId());
+        SurveyStudentInfo studentInfo = new SurveyStudentInfo(request.firstName(), request.lastName(), request.email());
+        Survey survey = surveyService.generateSurvey(mentor, studentInfo);
 
         GenerateSurveyResponse response = new GenerateSurveyResponse(
                 survey.id(),
                 survey.creationDate(),
-                survey.used()
-        );
+                survey.status()
+                );
 
         return ResponseEntity.ok(response);
     }
@@ -61,7 +65,7 @@ public class SurveyMentorController {
                 .map(survey -> new GenerateSurveyResponse(
                         survey.id(),
                         survey.creationDate(),
-                        survey.used()
+                        survey.status()
                 ))
                 .collect(Collectors.toList());
 
