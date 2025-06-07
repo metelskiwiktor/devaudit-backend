@@ -10,6 +10,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import pl.wiktor.devaudit.config.TestSecurityConfig;
+import pl.wiktor.devaudit.domain.mentor.Mentor;
+import pl.wiktor.devaudit.domain.mentor.MentorRepository;
 import pl.wiktor.devaudit.util.JwtTestUtil;
 import pl.wiktor.devaudit.infrastructure.database.student.StudentRepositoryJPA;
 import pl.wiktor.devaudit.domain.student.Student;
@@ -26,6 +28,8 @@ class StudentControllerIntegrationTest {
     private WebTestClient webTestClient;
     @Autowired
     private StudentRepositoryJPA studentRepository;
+    @Autowired
+    private MentorRepository mentorRepository;
 
     @BeforeEach
     void setUp() {
@@ -70,7 +74,7 @@ class StudentControllerIntegrationTest {
                 .subject(STUDENT_ID)
                 .role(MENTOR_ROLE)
                 .buildBearer();
-
+        mentorRepository.save(new Mentor(STUDENT_ID, "Jan", "Kowalski"));
         //when //then
         webTestClient.get().uri(API_STUDENT_EXAMPLE)
                 .header(HttpHeaders.AUTHORIZATION, token)
