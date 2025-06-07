@@ -20,9 +20,6 @@ public class ContainersConfig {
   public static final KeycloakContainer keycloak = new KeycloakContainer(KEYCLOAK_IMAGE)
           .withRealmImportFile(REALM_IMPORT_FILE);
 
-  static {
-    keycloak.start();
-  }
 
   @Bean
   public KeycloakContainer keycloakContainer() {

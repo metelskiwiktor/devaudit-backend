@@ -5,10 +5,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.mockito.Mockito;
+import static org.mockito.ArgumentMatchers.anyString;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import pl.wiktor.devaudit.domain.mentor.Mentor;
 import pl.wiktor.devaudit.domain.mentor.MentorRepository;
 import pl.wiktor.devaudit.domain.student.StudentRepository;
@@ -18,16 +24,13 @@ import pl.wiktor.devaudit.domain.survey.SurveyRepository;
 import pl.wiktor.devaudit.domain.survey.SurveyStatus;
 import pl.wiktor.devaudit.domain.survey.SurveyStudentInfo;
 import pl.wiktor.devaudit.api.request.SubmitSurveyFormRequest;
-import pl.wiktor.devaudit.api.controller.ContainersConfig;
-import pl.wiktor.devaudit.api.config.KeycloakTestConfig;
-import pl.wiktor.devaudit.api.config.KeycloakTestConfig.KeycloakTokenProvider;
+import pl.wiktor.devaudit.infrastructure.keycloak.KeycloakRegistrationService;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import pl.wiktor.devaudit.DevauditBackendApplication;
 
 @SpringBootTest(classes = DevauditBackendApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient
-@ContextConfiguration(classes = {ContainersConfig.class, KeycloakTestConfig.class})
+@AutoConfigureMockMvc
 class AnonymousControllerIntegrationTest {
 
     @Autowired
@@ -44,13 +47,19 @@ class AnonymousControllerIntegrationTest {
     ObjectMapper objectMapper;
 
     @Autowired
-    KeycloakTokenProvider tokenProvider;
+    WebApplicationContext context;
+
+    @MockBean
+    KeycloakRegistrationService keycloakRegistrationService;
 
     private static final String MENTOR_ID = "mentor-2";
 
     @BeforeEach
     void setup() {
         mentorRepository.save(new Mentor(MENTOR_ID, "Jane", "jane@example.com", false));
+        Mockito.when(keycloakRegistrationService.registerStudent(anyString(), anyString(), anyString()))
+                .thenReturn("student-1");
+        webTestClient = MockMvcWebTestClient.bindToApplicationContext(context).build();
     }
 
     @Test
@@ -62,9 +71,9 @@ class AnonymousControllerIntegrationTest {
         SubmitSurveyFormRequest request = createRequest();
 
         // when
-        webTestClient.post()
+        webTestClient.mutateWith(SecurityMockServerConfigurers.mockJwt())
+                .post()
                 .uri("/api/anonymous/survey/{id}/submit", survey.id())
-                .headers(headers -> headers.setBearerAuth(tokenProvider.obtainToken("admin", "password")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchange()

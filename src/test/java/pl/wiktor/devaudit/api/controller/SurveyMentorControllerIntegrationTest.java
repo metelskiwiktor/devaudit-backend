@@ -6,10 +6,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import pl.wiktor.devaudit.domain.mentor.Mentor;
 import pl.wiktor.devaudit.domain.mentor.MentorRepository;
 import pl.wiktor.devaudit.domain.survey.Survey;
@@ -17,15 +20,13 @@ import pl.wiktor.devaudit.domain.survey.SurveyRepository;
 import pl.wiktor.devaudit.domain.survey.SurveyStatus;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import pl.wiktor.devaudit.api.controller.ContainersConfig;
-import pl.wiktor.devaudit.api.config.KeycloakTestConfig;
-import pl.wiktor.devaudit.api.config.KeycloakTestConfig.KeycloakTokenProvider;
+import java.util.List;
+import java.util.Map;
 
 import pl.wiktor.devaudit.DevauditBackendApplication;
 
 @SpringBootTest(classes = DevauditBackendApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureWebTestClient
-@ContextConfiguration(classes = {ContainersConfig.class, KeycloakTestConfig.class})
+@AutoConfigureMockMvc
 class SurveyMentorControllerIntegrationTest {
 
     @Autowired
@@ -41,13 +42,15 @@ class SurveyMentorControllerIntegrationTest {
     ObjectMapper objectMapper;
 
     @Autowired
-    KeycloakTokenProvider tokenProvider;
+    WebApplicationContext context;
+
 
     private static final String MENTOR_ID = "mentor-1";
 
     @BeforeEach
     void setup() {
         mentorRepository.save(new Mentor(MENTOR_ID, "John", "john@example.com", false));
+        webTestClient = MockMvcWebTestClient.bindToApplicationContext(context).build();
     }
 
     @Test
@@ -58,9 +61,12 @@ class SurveyMentorControllerIntegrationTest {
         );
 
         // when
-        var result = webTestClient.post()
+        var result = webTestClient
+                .mutateWith(SecurityMockServerConfigurers.mockJwt()
+                        .jwt(jwt -> jwt.subject(MENTOR_ID)
+                                .claim("realm_access", Map.of("roles", List.of("mentor")))) )
+                .post()
                 .uri("/api/mentor/survey/generate")
-                .headers(headers -> headers.setBearerAuth(tokenProvider.obtainToken("mentor", "password")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
                 .exchange()

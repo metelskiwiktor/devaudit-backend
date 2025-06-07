@@ -2,40 +2,37 @@ package pl.wiktor.devaudit.api.controller;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.client.MockMvcWebTestClient;
+import org.springframework.web.context.WebApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
-import org.springframework.http.*;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import dasniko.testcontainers.keycloak.KeycloakContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.springframework.security.test.web.reactive.server.SecurityMockServerConfigurers;
 import pl.wiktor.devaudit.api.response.SyncUsersResponse;
 import pl.wiktor.devaudit.infrastructure.keycloak.KeycloakClient;
 import pl.wiktor.devaudit.infrastructure.keycloak.KeycloakUserDTO;
 import pl.wiktor.devaudit.domain.user.UserRole;
 
-import org.keycloak.OAuth2Constants;
-import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.KeycloakBuilder;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-@Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@Import({ContainersConfig.class, AdminControllerIntegrationTest.TestConfig.class})
+@Import(AdminControllerIntegrationTest.TestConfig.class)
 class AdminControllerIntegrationTest {
 
     @TestConfiguration
@@ -58,48 +55,26 @@ class AdminControllerIntegrationTest {
     }
 
     @Autowired
-    KeycloakContainer keycloak;
-
-    @LocalServerPort
-    int port;
-
+    WebTestClient webTestClient;
     @Autowired
-    TestRestTemplate restTemplate;
+    WebApplicationContext context;
 
-    @DynamicPropertySource
-    static void overrideProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.security.oauth2.resourceserver.jwt.issuer-uri",
-                () -> ContainersConfig.keycloak.getAuthServerUrl() + "/realms/devaudit");
+    @BeforeEach
+    void initClient() {
+        webTestClient = MockMvcWebTestClient.bindToApplicationContext(context).build();
     }
 
-    private String obtainToken(String username, String password) {
-        Keycloak kc = KeycloakBuilder.builder()
-                .serverUrl(keycloak.getAuthServerUrl())
-                .realm("devaudit")
-                .grantType(OAuth2Constants.PASSWORD)
-                .clientId("springboot-client")
-                .username(username)
-                .password(password)
-                .build();
-        return kc.tokenManager().getAccessTokenString();
-    }
 
     @Test
     void syncUsersShouldReturnSyncedUsersCount() {
-        String token = obtainToken("admin", "password");
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(token);
-        HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-        ResponseEntity<SyncUsersResponse> response = restTemplate.exchange(
-                "http://localhost:" + port + "/api/admin/sync-users",
-                HttpMethod.GET,
-                entity,
-                SyncUsersResponse.class);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().syncedCount()).isEqualTo(3);
+        webTestClient.mutateWith(SecurityMockServerConfigurers.mockJwt()
+                        .jwt(jwt -> jwt.subject("admin")
+                                .claim("realm_access", Map.of("roles", List.of("admin")))))
+                .get()
+                .uri("/api/admin/sync-users")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SyncUsersResponse.class)
+                .value(body -> assertThat(body.syncedCount()).isEqualTo(3));
     }
 }
