@@ -1,5 +1,6 @@
 package pl.wiktor.devaudit.api.controller;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.Mockito;
@@ -15,7 +16,6 @@ import org.springframework.http.*;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import pl.wiktor.devaudit.api.response.SyncUsersResponse;
 import pl.wiktor.devaudit.infrastructure.keycloak.KeycloakClient;
@@ -25,6 +25,7 @@ import pl.wiktor.devaudit.domain.user.UserRole;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
+import utlitiy.ContainersConfig;
 
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+@Disabled("Requires docker environment")
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
