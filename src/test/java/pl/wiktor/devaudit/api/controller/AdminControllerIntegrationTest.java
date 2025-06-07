@@ -25,7 +25,7 @@ import pl.wiktor.devaudit.domain.user.UserRole;
 import org.keycloak.OAuth2Constants;
 import org.keycloak.admin.client.Keycloak;
 import org.keycloak.admin.client.KeycloakBuilder;
-import utlitiy.ContainersConfig;
+import pl.wiktor.devaudit.util.ContainersConfig;
 
 import java.util.List;
 import java.util.Set;

@@ -41,4 +41,9 @@ public class StudentRepositoryJPA implements StudentRepository {
                 .map(entity -> new Student(entity.getKeycloakId(), entity.getFirstName(), entity.getEmail()))
                 .collect(Collectors.toList());
     }
+
+    public void clearDatabase() {
+        LOGGER.debug("Clearing database");
+        studentRepository.deleteAll();
+    }
 }
