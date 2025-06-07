@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import pl.wiktor.devaudit.api.response.GenerateSurveyResponse;
+import pl.wiktor.devaudit.api.response.SurveyResponse;
 import pl.wiktor.devaudit.infrastructure.database.survey.SurveyEntity;
 import pl.wiktor.devaudit.domain.survey.SurveyStatus;
 import pl.wiktor.devaudit.domain.survey.SurveySubmission;
@@ -28,11 +30,12 @@ import pl.wiktor.devaudit.infrastructure.database.mentor.MentorRepositorySpring;
 import pl.wiktor.devaudit.infrastructure.database.survey.SurveyRepositorySpring;
 import pl.wiktor.devaudit.infrastructure.database.survey.SurveyFormRepositorySpring;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
 @Import(TestSecurityConfig.class)
 class SurveyMentorControllerIntegrationTest {
-
     private static final String API_GENERATE = "/api/mentor/survey/generate";
     private static final String API_GET_ALL = "/api/mentor/survey/get-all";
     private static final String API_GET_ONE = "/api/mentor/survey/";
@@ -59,6 +62,7 @@ class SurveyMentorControllerIntegrationTest {
 
     @Test
     void shouldGenerateSurvey_whenMentorExists() {
+        //given
         String token = JwtTestUtil.builder()
                 .subject(MENTOR_ID)
                 .role(MENTOR_ROLE)
@@ -66,18 +70,22 @@ class SurveyMentorControllerIntegrationTest {
         mentorRepository.save(new Mentor(MENTOR_ID, "Jan", "jan@example.com"));
         GenerateSurveyRequest request = new GenerateSurveyRequest("Adam", "Nowak", "adam@test.com");
 
+        //when //then
         webTestClient.post().uri(API_GENERATE)
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .bodyValue(request)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.id").isNotEmpty()
-                .jsonPath("$.status").isEqualTo("PENDING");
+                .expectBody(GenerateSurveyResponse.class)
+                .value(resp -> {
+                    assertThat(resp.id()).isNotEmpty();
+                    assertThat(resp.status()).isEqualTo(SurveyStatus.PENDING);
+                });
     }
 
     @Test
     void shouldReturnSurvey_whenMentorRequestsExistingSurvey() {
+        //given
         String token = JwtTestUtil.builder()
                 .subject(MENTOR_ID)
                 .role(MENTOR_ROLE)
@@ -109,17 +117,21 @@ class SurveyMentorControllerIntegrationTest {
         form.setFormData(SurveyFormJsonConverter.convertToJson(submission));
         surveyFormRepositorySpring.save(form);
 
+        //when //then
         webTestClient.get().uri(API_GET_ONE + surveyId)
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$.survey.id").isEqualTo(surveyId)
-                .jsonPath("$.surveySubmission.personalInfo.email").isEqualTo("adam@test.com");
+                .expectBody(SurveyResponse.class)
+                .value(resp -> {
+                    assertThat(resp.survey().id()).isEqualTo(surveyId);
+                    assertThat(resp.surveySubmission().personalInfo().email()).isEqualTo("adam@test.com");
+                });
     }
 
     @Test
     void shouldReturnSurveys_whenMentorRequestsAllSurveys() {
+        //given
         String token = JwtTestUtil.builder()
                 .subject(MENTOR_ID)
                 .role(MENTOR_ROLE)
@@ -133,21 +145,24 @@ class SurveyMentorControllerIntegrationTest {
                 .exchange()
                 .expectStatus().isOk();
 
+        //when //then
         webTestClient.get().uri(API_GET_ALL)
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody()
-                .jsonPath("$[0].id").exists();
+                .expectBody(GenerateSurveyResponse[].class)
+                .value(resp -> assertThat(resp).isNotEmpty());
     }
 
     @Test
     void shouldReturnUnauthorized_whenMentorNotRegistered_onGetSurvey() {
+        //given
         String token = JwtTestUtil.builder()
                 .subject(MENTOR_ID)
                 .role(MENTOR_ROLE)
                 .buildBearer();
-        // no mentor saved
+
+        // when //then
         webTestClient.get().uri(API_GET_ONE + "non-id")
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .exchange()
@@ -156,12 +171,14 @@ class SurveyMentorControllerIntegrationTest {
 
     @Test
     void shouldReturnNotFound_whenSurveyDoesNotExist() {
+        //given
         String token = JwtTestUtil.builder()
                 .subject(MENTOR_ID)
                 .role(MENTOR_ROLE)
                 .buildBearer();
         mentorRepository.save(new Mentor(MENTOR_ID, "Jan", "jan@example.com"));
 
+        //when //then
         webTestClient.get().uri(API_GET_ONE + "missing")
                 .header(HttpHeaders.AUTHORIZATION, token)
                 .exchange()
