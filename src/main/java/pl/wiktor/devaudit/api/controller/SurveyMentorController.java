@@ -28,8 +28,8 @@ public class SurveyMentorController {
 
     @PostMapping("/generate")
     public ResponseEntity<GenerateSurveyResponse> generateSurvey(@LoggedMentor Mentor mentor,
-                                                                @RequestBody GenerateSurveyRequest request) {
-        LOGGER.info("Generate survey called by mentor: {}", mentor.keycloakId());
+                                                                 @RequestBody GenerateSurveyRequest request) {
+        LOGGER.info("Generate survey called by mentor: {}", mentor.email());
 
         SurveyStudentInfo studentInfo = new SurveyStudentInfo(request.firstName(), request.lastName(), request.email());
         Survey survey = surveyService.generateSurvey(mentor, studentInfo);
@@ -38,26 +38,30 @@ public class SurveyMentorController {
                 survey.id(),
                 survey.creationDate(),
                 survey.status()
-                );
+        );
+
+        LOGGER.debug("Returning survey response: {}", response);
 
         return ResponseEntity.ok(response);
     }
 
-@GetMapping("/{surveyId}")
-        public ResponseEntity<SurveyResponse> getSurvey(@PathVariable String surveyId) {
-            LOGGER.info("Checking survey ID: {}", surveyId);
+    @GetMapping("/{surveyId}")
+    public ResponseEntity<SurveyResponse> getSurvey(@LoggedMentor Mentor mentor, @PathVariable String surveyId) {
+        LOGGER.info("Checking survey ID: {} by mentor: {}", surveyId, mentor.email());
 
-            SurveyResponse response = new SurveyResponse(
-                    surveyService.getSurvey(surveyId),
-                    surveyService.getSurveySubmission(surveyId)
-            );
+        SurveyResponse response = new SurveyResponse(
+                surveyService.getSurvey(surveyId),
+                surveyService.getSurveySubmission(surveyId)
+        );
 
-            return ResponseEntity.ok(response);
-        }
+        LOGGER.debug("Returning survey response: {}", response);
+
+        return ResponseEntity.ok(response);
+    }
 
     @GetMapping("/get-all")
     public ResponseEntity<List<GenerateSurveyResponse>> getSurveys(@LoggedMentor Mentor mentor) {
-        LOGGER.info("Get surveys called by mentor: {}", mentor.keycloakId());
+        LOGGER.info("Get surveys called by mentor: {}", mentor.email());
 
         List<Survey> surveys = surveyService.getSurveysByMentorId(mentor.keycloakId());
 
@@ -68,6 +72,8 @@ public class SurveyMentorController {
                         survey.status()
                 ))
                 .collect(Collectors.toList());
+
+        LOGGER.debug("Returning {} surveys", response.size());
 
         return ResponseEntity.ok(response);
     }
